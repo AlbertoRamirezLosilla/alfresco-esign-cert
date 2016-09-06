@@ -8,6 +8,9 @@ public class SignModel {
 	
 	public static final QName ASPECT_SIGNED = QName.createQName(URI, "signed");
 	public static final QName PROP_TYPE = QName.createQName(URI, "type");
+	public static final QName PROP_SIGNED_USERS = QName.createQName(URI, "signedUsers");
+	public static final QName PROP_SIGNS_PAGE = QName.createQName(URI, "signsPage");
+	public static final QName PROP_SIGNS_POSITIONS = QName.createQName(URI, "signsPositions");
 	public static enum SIGNATURE_TYPE {
 		IMPLICIT, EXPLICIT
 	}

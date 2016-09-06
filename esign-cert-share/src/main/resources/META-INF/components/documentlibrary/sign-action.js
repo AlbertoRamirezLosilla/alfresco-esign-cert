@@ -47,4 +47,25 @@
 			this.widgets.signDialog.show();
 		}
 	});
+	
+	 /**
+	   * Show info signers in Document Library
+	   */
+
+	   if (Alfresco.DocumentList)
+	   {
+		   YAHOO.Bubbling.fire("registerRenderer",
+			        {
+			            propertyName: "signedInfo",
+			            renderer: function signedInfo_renderer(record, label) {
+			                var jsNode = record.jsNode,
+			                    properties = jsNode.properties,
+			                    html = "";
+			                var signed = properties["sign:signedUsers"] || "";
+			                html = '<span>' + label + signed + '</span>';
+
+			                return html;
+			            }
+			});
+	   }
 })();

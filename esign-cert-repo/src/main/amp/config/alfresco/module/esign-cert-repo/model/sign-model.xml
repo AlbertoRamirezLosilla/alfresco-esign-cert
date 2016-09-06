@@ -18,6 +18,15 @@
                 <property name="sign:type">
                     <type>d:text</type>
                 </property>
+                <property name="sign:signedUsers">
+                    <type>d:text</type>
+                </property>
+                <property name="sign:signsPage">
+                    <type>d:text</type>
+                </property>
+                <property name="sign:signsPositions">
+                    <type>d:text</type>
+                </property>
             </properties>   
             <associations>
               <association name="sign:signatureAssoc">

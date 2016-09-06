@@ -19,15 +19,31 @@ function main() {
 	model.fifthSignaturePosition = signatureParams.fifthSignaturePosition;
 	model.sixthSignaturePosition = signatureParams.sixthSignaturePosition;
 	
-	//Set available signature places
-	var aspects = jsonConnection("/slingshot/doclib/aspects/node/" + args.nodeRef.replace(":/", ""));
-	model.showOptionFirstSignature = (aspects.current.indexOf("sign:firstSignature") == -1);
-	model.showOptionSecondSignature = (aspects.current.indexOf("sign:secondSignature") == -1);
-	model.showOptionThirdSignature = (aspects.current.indexOf("sign:thirdSignature") == -1);
-	model.showOptionFourthSignature = (aspects.current.indexOf("sign:fourthSignature") == -1);
-	model.showOptionFifthSignature = (aspects.current.indexOf("sign:fifthSignature") == -1);
-	model.showOptionSixthSignature = (aspects.current.indexOf("sign:sixthSignature") == -1);
-
+	//Get properties node
+	var nodeProperties = jsonConnection("/slingshot/doclib2/node/" + args.nodeRef.replace(":/", ""));
+	model.signLastPage = true;
+	model.signFirstPage = true;
+	if(nodeProperties.item.node.properties["sign:signsPage"] != null){
+		model.signLastPage = (nodeProperties.item.node.properties["sign:signsPage"].indexOf("first") == -1);
+		model.signFirstPage = (nodeProperties.item.node.properties["sign:signsPage"].indexOf("last") == -1);
+	}
+	
+	//Get available signature places
+	model.showOptionFirstSignature = true;
+	model.showOptionSecondSignature = true;
+	model.showOptionThirdSignature = true;
+	model.showOptionFourthSignature = true;
+	model.showOptionFifthSignature = true;
+	model.showOptionSixthSignature = true;
+	if(nodeProperties.item.node.properties["sign:signsPositions"] != null){
+		model.showOptionFirstSignature = (nodeProperties.item.node.properties["sign:signsPositions"].indexOf("1") == -1);
+		model.showOptionSecondSignature = (nodeProperties.item.node.properties["sign:signsPositions"].indexOf("2") == -1);
+		model.showOptionThirdSignature = (nodeProperties.item.node.properties["sign:signsPositions"].indexOf("3") == -1);
+		model.showOptionFourthSignature = (nodeProperties.item.node.properties["sign:signsPositions"].indexOf("4") == -1);
+		model.showOptionFifthSignature = (nodeProperties.item.node.properties["sign:signsPositions"].indexOf("5") == -1);
+		model.showOptionSixthSignature = (nodeProperties.item.node.properties["sign:signsPositions"].indexOf("6") == -1);
+	}
+	
 	//Fill up the model with data
 	model.base64NodeContent = base64NodeContentResponse.base64NodeContent;
 	model.mimeType = args.mimeType;

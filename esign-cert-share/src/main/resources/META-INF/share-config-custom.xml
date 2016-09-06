@@ -5,11 +5,14 @@
 			<form>
 				<field-visibility>
 					<show id="sign:type" />
+					<show id="sign:signedUsers" />
 					<show id="sign:signatureAssoc" />
 				</field-visibility>
 				<appearance>
 					<set id="signed" appearance="bordered-panel" label-id="panel.signed" />
 					<field id="sign:type" set="signed" label-id="prop.type"
+						read-only="true" />
+					<field id="sign:signedUsers" set="signed" label-id="prop.signature.signedUsers"
 						read-only="true" />
 					<field id="sign:signatureAssoc" set="signed" label-id="prop.signature.assoc"
 						read-only="true">
@@ -129,5 +132,27 @@
 			<js src="components/documentlibrary/sign-action.js" />
 		</dependencies>
 	</config>
-
+	
+	 <!-- Document Library metadata section -->
+	<config evaluator="string-compare" condition="DocumentLibrary">   
+		<metadata-templates>      
+		    <template id="default">
+		    	<banner index="10" id="lockBanner" evaluator="evaluator.doclib.metadata.hasLockBanner">{lockBanner}</banner>
+	            <banner index="20" id="syncTransientError" evaluator="evaluator.doclib.metadata.hasSyncTransientErrorBanner">{syncTransientError}</banner>
+	            <banner index="30" id="syncFailed" evaluator="evaluator.doclib.metadata.hasSyncFailedBanner">{syncFailed}</banner>
+		       	<line index="10" id="date">{date}{size}</line>
+		        <line index="20" id="signature" view="detailed" evaluator="evaluator.doclib.action.signed">{signedInfo metadata.signed-users}</line>
+		        <line index="30" id="description" view="detailed">{description}</line>
+		        <line index="40" id="tags" view="detailed">{tags}</line>
+		        <line index="50" id="categories" view="detailed" evaluator="evaluator.doclib.metadata.hasCategories">{categories}</line>
+				<line index="60" id="social" view="detailed">{social}</line>
+		   </template>
+		</metadata-templates>
+	</config>
+	
+	<!-- <config evaluator="string-compare" condition="DocLibCustom">
+           <dependencies>
+               <js src="documentlibrary/signedFile.js"/>
+           </dependencies>
+	</config> -->
 </alfresco-config>

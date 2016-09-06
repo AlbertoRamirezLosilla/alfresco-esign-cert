@@ -4,6 +4,7 @@ import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.OutputStream;
 import java.io.Serializable;
+import java.security.cert.CertificateException;
 import java.security.cert.CertificateFactory;
 import java.security.cert.X509Certificate;
 import java.util.Arrays;
@@ -16,6 +17,7 @@ import java.util.Map;
 import org.alfresco.model.ContentModel;
 import org.alfresco.repo.content.MimetypeMap;
 import org.alfresco.service.cmr.coci.CheckOutCheckInService;
+import org.alfresco.service.cmr.repository.AssociationRef;
 import org.alfresco.service.cmr.repository.ChildAssociationRef;
 import org.alfresco.service.cmr.repository.ContentService;
 import org.alfresco.service.cmr.repository.ContentWriter;
@@ -67,7 +69,7 @@ public class SaveSign extends AbstractWebScript {
 		BasicResponse response = new BasicResponse();
 		
 		try {
-			
+
 			String jsonText = req.getContent().getContent();
 			request = gson.fromJson(jsonText, SaveSignRequest.class);
 			
@@ -79,24 +81,48 @@ public class SaveSign extends AbstractWebScript {
 		    if(StringUtils.isBlank(request.getSignerData()) || request.getSignerData().equals(JS_UNDEFINED)) {
 				log.warn("Signer data is empty or null.");
 			} else {
-				CertificateFactory cf = CertificateFactory.getInstance("X.509");
-				ByteArrayInputStream bais = new ByteArrayInputStream(Base64.decodeBase64(request.getSignerData()));
-				X509Certificate certificate = (X509Certificate) cf.generateCertificate(bais);
+				X509Certificate certificate = getDataCertificate(request);
 				aspectSignatureProperties = setCertificateProperties(certificate);
 			}
 		    
 		    //Document to sign
 			NodeRef nodeRef = new NodeRef(request.getNodeRef());
+			//Data signer
+			X509Certificate certificate = getDataCertificate(request);
+			//Check if signer had signed a document
+			if(hadSigner(nodeRef, certificate)){
+				throw new WebScriptException("Signer user can't sign many times a document.");
+			}
 			
+			String dataSigner = getDataSigner(certificate);
+
 			versionService.ensureVersioningEnabled(nodeRef, null);
+			
+			//Check if had signs, and concatenate if it's necessary
+			if (nodeService.getProperty(nodeRef, SignModel.PROP_SIGNED_USERS) != null){
+		    	String dataSignedUsers = (String) nodeService.getProperty(nodeRef, SignModel.PROP_SIGNED_USERS);
+		    	dataSigner = dataSignedUsers + " ; " + dataSigner;
+		    }
+			//Get sign position and set property signsPositions
+			String signPosition = request.getSignerPostition();
+			if (nodeService.getProperty(nodeRef, SignModel.PROP_SIGNS_POSITIONS) != null){
+		    	String signsPositions = (String) nodeService.getProperty(nodeRef, SignModel.PROP_SIGNS_POSITIONS);
+		    	signPosition = signsPositions + "," + signPosition;
+		    }
 			
 			Map<QName, Serializable> aspectSignedProperties = new HashMap<QName, Serializable>();
 			if (request.getMimeType().equals(PDF_EXTENSION)) { // PAdES
 			    storeSignPDF(nodeRef, request.getSignedData(), aspectSignatureProperties);
 			    aspectSignedProperties.put(SignModel.PROP_TYPE, I18NUtil.getMessage("signature.implicit"));
+			    aspectSignedProperties.put(SignModel.PROP_SIGNED_USERS, dataSigner);
+			    aspectSignedProperties.put(SignModel.PROP_SIGNS_PAGE, request.getSignsPage());
+			    aspectSignedProperties.put(SignModel.PROP_SIGNS_POSITIONS, signPosition);
 			} else { // CAdES
 			    storeSignOther(nodeRef, request.getSignedData(), aspectSignatureProperties);
 			    aspectSignedProperties.put(SignModel.PROP_TYPE, I18NUtil.getMessage("signature.explicit"));
+			    aspectSignedProperties.put(SignModel.PROP_SIGNED_USERS, dataSigner);
+			    aspectSignedProperties.put(SignModel.PROP_SIGNS_PAGE, request.getSignsPage());
+			    aspectSignedProperties.put(SignModel.PROP_SIGNS_POSITIONS, signPosition);
 			}
 			nodeService.addAspect(nodeRef, SignModel.ASPECT_SIGNED, aspectSignedProperties);
 			
@@ -199,6 +225,53 @@ public class SaveSign extends AbstractWebScript {
 	    return aspectSignatureProperties;
 	}
 	
+	private X509Certificate getDataCertificate(SaveSignRequest request) throws CertificateException{
+		
+		CertificateFactory cf = CertificateFactory.getInstance("X.509");
+		ByteArrayInputStream bais = new ByteArrayInputStream(Base64.decodeBase64(request.getSignerData()));
+		X509Certificate certificate = (X509Certificate) cf.generateCertificate(bais);
+		
+		return certificate;
+	}
+	
+	private String getDataSigner(X509Certificate certificate){
+		
+			String dataSigner = certificate.getSubjectX500Principal().toString();
+		    //Extract name and surname signers
+		    int start =	dataSigner.indexOf("CN=");
+		    dataSigner = dataSigner.substring(start + 3);
+		    start = 0;
+		    int finish = dataSigner.length();
+		    if(dataSigner.indexOf("-") > 0){
+		    	finish = dataSigner.indexOf("-") - 1; //for certificate
+		    }else{
+		    	finish = dataSigner.indexOf("\","); //for DNIe
+		    }
+		    dataSigner = "\"" + dataSigner.substring(start, finish).replace("\"","") + "\"";
+		    
+		    return dataSigner;
+	}
+	
+	private boolean hadSigner(NodeRef nodeRef, X509Certificate certificate){
+		
+		boolean isSigner = false;
+		
+		List<AssociationRef> nodes = nodeService.getTargetAssocs(nodeRef, SignModel.ASSOC_SIGNATURE);
+
+	    for (AssociationRef element : nodes) {
+	    	
+	    	NodeRef childRef = element.getTargetRef();
+	    	String signedUser = nodeService.getProperty(childRef, SignModel.PROP_CERTIFICATE_SERIAL_NUMBER).toString();
+	    	String serialNumber =  certificate.getSerialNumber().toString();
+	    	
+	    	if(signedUser.equals(serialNumber)){
+	    		isSigner = true;
+	    		return isSigner;
+	    	}
+	    }
+
+		return isSigner;
+	}
 	
 	public CheckOutCheckInService getCheckOutCheckInService() {
 		return checkOutCheckInService;

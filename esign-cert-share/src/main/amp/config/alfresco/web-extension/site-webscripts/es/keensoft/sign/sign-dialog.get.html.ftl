@@ -34,8 +34,12 @@
 				<div style="width: 50%;  display: inline-block">
 					<div id="pageTitle">${msg("page")}</div>
 					<select id="signaturePage" style="width: 95%;">
+						<#if signLastPage>
 						<option value="last">${msg("page.last")}</option>
+						</#if>
+						<#if signFirstPage>
 						<option value="first">${msg("page.first")}</option>
+						</#if>
 					</select>	
 				</div>	
 				</#if>					  								  			
@@ -48,7 +52,8 @@
 				<input type="hidden" id="signerRole" name="signerRole" value="" />
 				<input type="hidden" id="mimeType" name="mimeType" value="${mimeType}" />
 				<input type="hidden" id="nodeRef" name="nodeRef" value="${nodeRef}" />
-				<input type="hidden" id="signerPostition" name="signerPostition" value="" />			 
+				<input type="hidden" id="signerPostition" name="signerPostition" value="" />
+				<input type="hidden" id="signsPage" name="signsPage" value="" />			 
 	         	<div class="bdft" style="display:none;">
 		         	<input type="button" id="signDialog-ok" value="${msg("button.ok")}" />
 		         	<input type="button" id="signDialog-cancel" value="${msg("button.cancel")}" />
@@ -127,6 +132,9 @@
 	      			if(pageSelect == "first")
 	      			{
 	      				page = "1";
+	      				YAHOO.util.Dom.get("signsPage").value = "first";
+	      			}else{
+	      				YAHOO.util.Dom.get("signsPage").value = "last";
 	      			}
 	      			
 	      			finalSignaturePosition = finalSignaturePosition.replace("{page}", page);
