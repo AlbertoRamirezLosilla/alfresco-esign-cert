@@ -126,7 +126,12 @@ esign.cert.params.sixthSignaturePosition=signaturePage={page}\tsignaturePosition
 
 # Property for disable sign other docs
 esign.cert.signOtherDocs=false
+#Property for disable/enable sign a document many times for an user
+esign.cert.signManyTimes=true
 ```
+
+If you need sign other files as CAdES change in alfresco-global.properties 'esign.cert.signOtherDocs' to 'true'
+If you need that the user can´t sign many times the same file, change in alfresco-global.properties 'esign.cert.signManyTimes' to 'false'
 
 Usage
 ----------------------
@@ -161,3 +166,4 @@ Pending features to be included (aka "wishlist"):
 * Douglas CR Paes
 * Vasil Iliev
 * Pedro González
+* Alberto Ramírez Losilla
