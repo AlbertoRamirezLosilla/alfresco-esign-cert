@@ -60,6 +60,7 @@ public class SaveSign extends AbstractWebScript {
 	private VersionService versionService;
 	private ContentService contentService;
 	private NodeService nodeService;
+	private String signManyTimes;
 	
 	@Override
 	public void execute(WebScriptRequest req, WebScriptResponse res) throws IOException {
@@ -89,8 +90,8 @@ public class SaveSign extends AbstractWebScript {
 			NodeRef nodeRef = new NodeRef(request.getNodeRef());
 			//Data signer
 			X509Certificate certificate = getDataCertificate(request);
-			//Check if signer had signed a document
-			if(hadSigner(nodeRef, certificate)){
+			//Check if esign.cert.signManyTime is enabled/disabled and check if signer had signed a document
+			if(signManyTimes.equals("false") && hadSigner(nodeRef, certificate)){
 				throw new WebScriptException("Signer user can't sign many times a document.");
 			}
 			
@@ -303,6 +304,14 @@ public class SaveSign extends AbstractWebScript {
 
 	public void setNodeService(NodeService nodeService) {
 		this.nodeService = nodeService;
+	}
+	
+	public String getSignManyTimes() {
+		return signManyTimes;
+	}
+
+	public void setSignManyTimes(String signManyTimes) {
+		this.signManyTimes = signManyTimes;
 	}
 
 }

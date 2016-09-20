@@ -24,6 +24,7 @@
 		<property name="versionService" ref="VersionService" />
 		<property name="checkOutCheckInService" ref="CheckOutCheckInService" />
 		<property name="nodeService" ref="NodeService" />
+		<property name="signManyTimes" value="${esign.cert.signManyTimes}" />
 	</bean>
 
 	<bean id="webscript.es.keensoft.sign.webscripts.base64-node-content.get"
