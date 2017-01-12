@@ -1,7 +1,7 @@
 <div id="signDialog" class="">
    <div class="hd">${msg("window.title")}</div>
-   <div class="bd">		
-     	<#if !jsonError>	     		
+   <div class="bd">
+     	<#if !jsonError>
 		    <div id="info" class="yui-gd" style="padding:30px;text-align:justify;">
 				<div id="loading-text" style="display:none;">${msg("document.ready")}</div>
 				<div id="loading" style="text-align:center; display: none;">
@@ -42,9 +42,16 @@
 						</#if>
 					</select>	
 				</div>	
+				<#if signaturePurposeEnabled>
+				<div style="width: 90%;  display: inline-block; padding-top: 10px">
+					<div id="purposeTitle">${msg("purpose")}</div>
+					<textarea id="signaturePurposeText" name="signaturePurposeText" tabindex="0" rows="1" cols="50" style="width: 107%; height: 20px"></textarea>
+				</div>
+				</#if>
 				</#if>					  								  			
 				<div id="sign-component" style="width:100%;"></div>	 
 			</div>			
+
 			<form id="signDialog-form" action="" method="POST">
 				<input type="hidden" id="dataToSign" name="dataToSign" value="${base64NodeContent}" />
 				<input type="hidden" id="signedData" name="signedData" value="" />
@@ -54,6 +61,9 @@
 				<input type="hidden" id="nodeRef" name="nodeRef" value="${nodeRef}" />
 				<input type="hidden" id="signerPostition" name="signerPostition" value="" />
 				<input type="hidden" id="signsPage" name="signsPage" value="" />			 
+				<#if signaturePurposeEnabled>
+				<input type="hidden" id="signaturePurpose" name="signaturePurpose" value="" />
+				</#if>
 	         	<div class="bdft" style="display:none;">
 		         	<input type="button" id="signDialog-ok" value="${msg("button.ok")}" />
 		         	<input type="button" id="signDialog-cancel" value="${msg("button.cancel")}" />
@@ -62,9 +72,9 @@
 			<#if mimeType == "pdf">
 		    <div id="button-div" class="bdft">
 		        <button type="button"
-		         	id="signPosition-TMPok" 
+		         	id="signPosition-TMPok"
 		         	class="yui-skin-lightTheme yui-button yui-skin-lightTheme"
-		         	value="${msg("button.sign")}" 
+		         	value="${msg("button.sign")}"
 		         	style="height: 30px;min-width: 70px;margin: 2px;border: 1px solid #ccc;"
 		         	onclick="chosePosition()">${msg("button.sign")}</button>
 	        </div>
@@ -85,7 +95,8 @@
 
 	      		var running = false;
 	      		var loadingSignComponentInterval = null;
-	      		var loadingFrameInterval = null; 
+	      		var loadingFrameInterval = null;
+	      		var signaturePurposeValue = null;
 
 	      		function chosePosition() {
 	      			var position = YAHOO.util.Dom.get("signaturePlace").value;
@@ -95,9 +106,19 @@
 	      			YAHOO.util.Dom.get("signaturePlace").style.display = "none";
 	      			YAHOO.util.Dom.get("signaturePage").style.display = "none";
 	      			YAHOO.util.Dom.get("pageTitle").style.display = "none";
+	      			if(${signaturePurposeEnabled?string('true', 'false')})
+	      			{
+	      				YAHOO.util.Dom.get("purposeTitle").style.display = "none";
+	      				YAHOO.util.Dom.get("signaturePurposeText").style.display = "none";
+  						signaturePurposeValue = YAHOO.util.Dom.get("signaturePurposeText").value;
+  						if(signaturePurposeValue)
+  						{
+	      					YAHOO.util.Dom.get("signaturePurpose").value = signaturePurposeValue;
+  						}
+	      			}
 	      			YAHOO.util.Dom.get("loading-text").style.display = "block";
 	      			YAHOO.util.Dom.get("loading").style.display = "block";
-	      			
+
 	      			if(position == "sig1")
 	      			{
 	      				finalSignaturePosition = options.firstPosition;
@@ -128,7 +149,7 @@
 	      				finalSignaturePosition = options.sixthPosition;
 	      				YAHOO.util.Dom.get("signerPostition").value = "6";
 	      			}
-	      			
+
 	      			if(pageSelect == "first")
 	      			{
 	      				page = "1";
@@ -136,11 +157,12 @@
 	      			}else{
 	      				YAHOO.util.Dom.get("signsPage").value = "last";
 	      			}
-	      			
+
 	      			finalSignaturePosition = finalSignaturePosition.replace("{page}", page);
 	      			loadingFrameInterval = window.setInterval(checkZIndex, 500);
+
 	      		}
-	      		
+
 	      		function show_signed(signatureBase64, certificateB64) {
 	      		    signedData.value = signatureBase64;
 	      		    signerData.value = certificateB64;
@@ -148,13 +170,13 @@
                     var submitButton = YAHOO.util.Dom.get("signDialog-ok");
 	      			submitButton.click();
 	      		}
-	      				 
+
                 function show_error(errorType, errorMessage) {
-                    YAHOO.util.Dom.get("info").innerHTML="${msg("error.unknown")} - " + errorType + ":" + errorMessage; 
+                    YAHOO.util.Dom.get("info").innerHTML="${msg("error.unknown")} - " + errorType + ":" + errorMessage;
                     var submitButton = YAHOO.util.Dom.get("signDialog-cancel");
                     submitButton.click();
                 }
-                
+
 	      		if(documentMimetype != "pdf") {
 	      			var waitToLoadDOM = setInterval(function() {
 	      				if(YAHOO.util.Dom.get("loading-text") != undefined) {
@@ -163,23 +185,35 @@
 			      			YAHOO.util.Dom.get("loading").style.display = "block";
 			      			loadingFrameInterval = window.setInterval(checkZIndex, 500);
 	      				}
-	      			}, 500);      			
+	      			}, 500);
 	      		}
-	      					      		
+
 	      		function checkZIndex() {
-	      					      			
+
 	      			var zIndex = YAHOO.util.Dom.getStyle(this.signDialog.parentElement, "z-index");
 	      			if(zIndex > 0) {
-	      			
+
 	      				window.clearInterval(loadingFrameInterval);
 	      				var iframeURL = encodeURI("/share/sign/sign-frame.jsp?mimeType=${mimeType}&paramsCades=${paramsCades}&paramsPades=" + finalSignaturePosition + "&signatureAlg=${signatureAlg}");
-	      				YAHOO.util.Dom.get("sign-component").innerHTML="<iframe scrolling='no' frameborder='0' allowTransparency='true' id='sign-frame' src='" + iframeURL + "' style='overflow:hidden;width:100%;border:none;height:0px;' />";			      				
+	      				<#if signaturePurposeEnabled>
+	      					iframeURL = iframeURL.concat("&signReason=" + unicodeEscape(signaturePurposeValue));
+	      				</#if>
+	      				YAHOO.util.Dom.get("sign-component").innerHTML="<iframe scrolling='no' frameborder='0' allowTransparency='true' id='sign-frame' src='" + iframeURL + "' style='overflow:hidden;width:100%;border:none;height:0px;' />";
 	      				loadingSignComponentInterval = window.setInterval(doSign, 500);
-	      				
-	      			}		  		
-	      		}	
 
-	      		function doSign() {
+	      			}
+	      		}
+
+	      		function unicodeEscape(str)
+		  		{
+					for (var result = '', index = 0, charCode; !isNaN(charCode = str.charCodeAt(index++));)
+					{
+						result += '\\u' + ('0000' + charCode.toString(16)).slice(-4);
+					}
+					return result;
+				}
+
+				function doSign() {
       				var signFrame = YAHOO.util.Dom.get("sign-frame");
       				var signForm = YAHOO.util.Dom.get("signDialog-form");
 	      			if(signFrame.contentWindow.doSign) {
@@ -190,9 +224,10 @@
 	      				}
       				}
 	      		};
-	      		
-			//]]></script>	
-			      				      	
+
+
+			//]]></script>
+
   	    <#else>
   	      	<div class="yui-gd" style="padding:30px;text-align:justify;">
   				${msg("error.unknown")}
@@ -201,7 +236,7 @@
 	         	<div class="bdft">
 	         		<input type="button" id="signDialog-cancel" value="${msg("button.ok")}" />
 	         	</div>
-	      	</form>      	
+	      	</form>
         </#if>
  	</div>
 </div>

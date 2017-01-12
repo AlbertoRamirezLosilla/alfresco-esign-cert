@@ -14,7 +14,7 @@ java -jar alfresco-mmt.jar uninstall sign-document-share ../tomcat/webapps/share
 
 ## esign-cert features
 
-**AutoFirma** local application for computers is currently supported only for Windows, but Mac OS and Linux versions are on the roadmap. This Windows application shall be installed before using the addon.
+**AutoFirma** local application for computers is currently supported only for Windows, Mac OS and Linux. Available at [AutoFirma](http://firmaelectronica.gob.es/Home/Descargas.html)
 
 **Cliente movil @firma** local application for devices is currently supported for iOS and Android:
 * Google Play - [Cliente movil @firma](https://play.google.com/store/apps/details?id=es.gob.afirma)
@@ -31,11 +31,11 @@ Windows
 Mac OS 
 * Mozilla Firefox: Applet
 * Apple Safari: Applet
-* Google Chrome: Local application (not yet available)
+* Google Chrome: Local application (currently not working)
 
 Linux Ubuntu
 * Mozilla Firefox: Applet
-* Google Chrome: Local application (not yet available)
+* Google Chrome: Local application
 
 iOS
 * Apple Safari: Local application
@@ -52,15 +52,15 @@ This module uses a software digital certificate or a cryptographic hardware supp
 The plugin is licensed under the [LGPL v3.0](http://www.gnu.org/licenses/lgpl-3.0.html). 
 
 **State**
-Current addon release 1.0.0 is ***PROD***
+Current addon release 1.3.1 is ***PROD***
 
 **Compatibility**
-The current version has been developed using Alfresco 5.1 and Alfresco SDK 2.1.1, although it should run in Alfresco 5.0.d and Alfresco 5.0.c
+The current version has been developed using Alfresco 5.0.d and Alfresco SDK 2.1.1, although it runs in Alfresco 5.1.x
 
 Browser compatibility: 100% supported (refer previous paragraph)
 
 **Languages**
-Currently provided in English,Spanish and Macedonian.
+Currently provided in English,Spanish, Macedonian and Brazilian Portuguese.
 
 ***No original Alfresco resources have been overwritten***
 
@@ -69,8 +69,8 @@ Downloading the ready-to-deploy-plugin
 --------------------------------------
 The binary distribution is made of two amp files:
 
-* [repo AMP](https://github.com/keensoft/alfresco-esign-cert/releases/download/1.0.0/esign-cert-repo.amp)
-* [share AMP](https://github.com/keensoft/alfresco-esign-cert/releases/download/1.0.0/esign-cert-share.amp)
+* [repo AMP](https://github.com/keensoft/alfresco-esign-cert/releases/download/1.3.1/esign-cert-repo.amp)
+* [share AMP](https://github.com/keensoft/alfresco-esign-cert/releases/download/1.3.1/esign-cert-share.amp)
 
 You can install them by using standard [Alfresco deployment tools](http://docs.alfresco.com/community/tasks/dev-extensions-tutorials-simple-module-install-amp.html)
 
@@ -88,6 +88,12 @@ Signing the applet
 You can download plain applet from http://forja-ctt.administracionelectronica.gob.es/web/clienteafirma
 
 Oracle [jarsigner](http://docs.oracle.com/javase/7/docs/technotes/tools/windows/jarsigner.html) can be used to perform a signature on [miniapplet-full_1_4.jar](https://github.com/keensoft/alfresco-esign-cert/raw/master/esign-cert-share/src/main/amp/web/sign/miniapplet-full_1_4.jar). To deploy this change, just replace current JAR for your signed JAR and rebuild the artifacts.
+
+Below a sample `jarsigner` invocation is provided
+
+```
+$ jarsigner -storetype pkcs12 -keystore keensoft_sign_code_valid-until_20170811.pfx miniapplet-full_1_4.jar -tsa http://tss.accv.es:8318/tsa te-9b5d5438-2bb6-435f-8542-6d711bc9784f
+```
 
 
 Running under SSL
@@ -126,12 +132,14 @@ esign.cert.params.sixthSignaturePosition=signaturePage={page}\tsignaturePosition
 
 # Property for disable sign other docs
 esign.cert.signOtherDocs=false
+
 #Property for disable/enable sign a document many times for an user
 esign.cert.signManyTimes=true
+
+# Sign Purpose (Default enabled=false)
+esign.cert.params.signPurpose.enabled=false
 ```
 
-If you need sign other files as CAdES change in alfresco-global.properties 'esign.cert.signOtherDocs' to 'true'
-If you need that the user can´t sign many times the same file, change in alfresco-global.properties 'esign.cert.signManyTimes' to 'false'
 
 Usage
 ----------------------
@@ -150,6 +158,7 @@ Issuer: OU=FNMT Clase 2 CA, O=FNMT, C=ES
 ```
 
 PDF files can be signed up to 6 times on 6 different positions. Once a PDF is signed in a certain position that position is no longer available for signing. The signatures positions are defined in **alfresco-global.properties**.
+
 Todo
 ----------------------
 Pending features to be included (aka "wishlist"):
@@ -163,7 +172,9 @@ Pending features to be included (aka "wishlist"):
 
 ## Contributors
 
-* Douglas CR Paes
+* Daniel E. Fernández
+* Douglas C. R. Paes
 * Vasil Iliev
 * Pedro González
 * Alberto Ramírez Losilla
+* Mikel Asla

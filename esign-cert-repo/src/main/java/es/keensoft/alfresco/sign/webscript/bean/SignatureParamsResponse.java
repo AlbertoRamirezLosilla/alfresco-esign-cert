@@ -12,6 +12,7 @@ public class SignatureParamsResponse {
 	private String fifthSignaturePosition;
 	private String sixthSignaturePosition;
 	private String signsPage;
+	private boolean signaturePurposeEnabled;
 	
 	public String getParamsCades() {
 		return paramsCades;
@@ -31,8 +32,6 @@ public class SignatureParamsResponse {
 	public void setSignatureAlg(String signatureAlg) {
 		this.signatureAlg = signatureAlg;
 	}
-
-
 	public String getFirstSignaturePosition() {
 		return firstSignaturePosition;
 	}
@@ -74,6 +73,12 @@ public class SignatureParamsResponse {
 	}
 	public void setSignsPage(String signsPage) {
 		this.signsPage = signsPage;
+	}
+	public boolean isSignaturePurposeEnabled() {
+		return signaturePurposeEnabled;
+	}
+	public void setSignaturePurposeEnabled(boolean signaturePurposeEnabled) {
+		this.signaturePurposeEnabled = signaturePurposeEnabled;
 	}
 
 }

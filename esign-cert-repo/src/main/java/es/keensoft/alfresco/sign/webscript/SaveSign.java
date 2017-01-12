@@ -113,13 +113,13 @@ public class SaveSign extends AbstractWebScript {
 			
 			Map<QName, Serializable> aspectSignedProperties = new HashMap<QName, Serializable>();
 			if (request.getMimeType().equals(PDF_EXTENSION)) { // PAdES
-			    storeSignPDF(nodeRef, request.getSignedData(), aspectSignatureProperties);
+			    storeSignPDF(nodeRef, request.getSignedData(), request.getSignaturePurpose(), aspectSignatureProperties);
 			    aspectSignedProperties.put(SignModel.PROP_TYPE, I18NUtil.getMessage("signature.implicit"));
 			    aspectSignedProperties.put(SignModel.PROP_SIGNED_USERS, dataSigner);
 			    aspectSignedProperties.put(SignModel.PROP_SIGNS_PAGE, request.getSignsPage());
 			    aspectSignedProperties.put(SignModel.PROP_SIGNS_POSITIONS, signPosition);
 			} else { // CAdES
-			    storeSignOther(nodeRef, request.getSignedData(), aspectSignatureProperties);
+			    storeSignOther(nodeRef, request.getSignedData(), request.getSignaturePurpose(), aspectSignatureProperties);
 			    aspectSignedProperties.put(SignModel.PROP_TYPE, I18NUtil.getMessage("signature.explicit"));
 			    aspectSignedProperties.put(SignModel.PROP_SIGNED_USERS, dataSigner);
 			    aspectSignedProperties.put(SignModel.PROP_SIGNS_PAGE, request.getSignsPage());
@@ -136,7 +136,7 @@ public class SaveSign extends AbstractWebScript {
 		res.getWriter().write(gson.toJson(response));
 	}
 	
-	private void storeSignOther(NodeRef originalNodeRef, String signedData, Map<QName, Serializable> aspectProperties) throws IOException {
+	private void storeSignOther(NodeRef originalNodeRef, String signedData, String purpose, Map<QName, Serializable> aspectProperties) throws IOException {
 		
 		NodeRef parentRef = nodeService.getPrimaryParent(originalNodeRef).getParentRef();
 		String originalFileName = nodeService.getProperty(originalNodeRef, ContentModel.PROP_NAME).toString();
@@ -157,11 +157,15 @@ public class SaveSign extends AbstractWebScript {
 		
 	    aspectProperties.put(SignModel.PROP_FORMAT, CADES_BES_DETACHED);
 	    aspectProperties.put(SignModel.PROP_DATE, new Date());
+	    if(purpose != null)
+	    {
+	    	aspectProperties.put(SignModel.PROP_SIGNATURE_PURPOSE, purpose);
+	    }
 		nodeService.addAspect(signatureNodeRef, SignModel.ASPECT_SIGNATURE, aspectProperties);
 		
 	}
 	
-	private void storeSignPDF(NodeRef originalNodeRef, String signedData, Map<QName, Serializable> aspectProperties) throws IOException {
+	private void storeSignPDF(NodeRef originalNodeRef, String signedData, String purpose, Map<QName, Serializable> aspectProperties) throws IOException {
 		
 		String originalFileName = nodeService.getProperty(originalNodeRef, ContentModel.PROP_NAME).toString();
 		String signatureFileName = FilenameUtils.getBaseName(originalFileName) + "-" + System.currentTimeMillis() + "-" + PADES;
@@ -185,6 +189,10 @@ public class SaveSign extends AbstractWebScript {
 		
 	    aspectProperties.put(SignModel.PROP_FORMAT, PADES);
 	    aspectProperties.put(SignModel.PROP_DATE, new Date());
+	    if(purpose != null)
+	    {
+	    	aspectProperties.put(SignModel.PROP_SIGNATURE_PURPOSE, purpose);
+	    }
 		nodeService.addAspect(signatureNodeRef, SignModel.ASPECT_SIGNATURE, aspectProperties);
 	
 	}

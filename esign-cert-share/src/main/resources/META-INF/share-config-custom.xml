@@ -34,6 +34,7 @@
 					<show id="sign:certificateSerialNumber" />
 					<show id="sign:certificateNotAfter" />
 					<show id="sign:certificateIssuer" />
+					<show id="sign:signaturePurpose" />
 					<show id="sign:docAssoc" />
 				</field-visibility>
 				<appearance>
@@ -54,6 +55,8 @@
 						label-id="prop.certificate.not.after" read-only="true" />
 					<field id="sign:certificateIssuer" set="signature"
 						label-id="prop.certificate.issuer" read-only="true" />
+					<field id="sign:signaturePurpose" set="signature"
+						label-id="prop.purpose" read-only="true" />
 					<field id="sign:docAssoc" set="signature" label-id="prop.original.document"
 						read-only="true">
 						<control template="/org/alfresco/components/form/controls/association.ftl">

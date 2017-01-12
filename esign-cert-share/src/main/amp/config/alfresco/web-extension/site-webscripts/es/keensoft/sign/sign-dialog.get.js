@@ -18,6 +18,7 @@ function main() {
 	model.fourthSignaturePosition = signatureParams.fourthSignaturePosition;
 	model.fifthSignaturePosition = signatureParams.fifthSignaturePosition;
 	model.sixthSignaturePosition = signatureParams.sixthSignaturePosition;
+	model.signaturePurposeEnabled = signatureParams.signaturePurposeEnabled;
 	
 	//Get properties node
 	var nodeProperties = jsonConnection("/slingshot/doclib2/node/" + args.nodeRef.replace(":/", ""));

@@ -3,6 +3,8 @@ package es.keensoft.alfresco.behaviour;
 import java.io.InputStream;
 import java.io.Serializable;
 import java.security.KeyStore;
+import java.security.Provider;
+import java.security.Security;
 import java.security.cert.X509Certificate;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -100,6 +102,9 @@ public class CustomBehaviour implements
 			ContentReader contentReader = contentService.getReader(node, ContentModel.PROP_CONTENT);
 			InputStream is = contentReader.getContentInputStream();
 			
+			// For SHA-256 and upper
+			loadBCProvider();
+			
 			PdfReader reader = new PdfReader(is);
 	        AcroFields af = reader.getAcroFields();
 	        ArrayList<String> names = af.getSignatureNames();
@@ -113,7 +118,7 @@ public class CustomBehaviour implements
 	           
 	            //Set aspect properties for each signature
 	            Map<QName, Serializable> aspectSignatureProperties = new HashMap<QName, Serializable>(); 
-	            aspectSignatureProperties.put(SignModel.PROP_DATE, pk.getSignDate().getTime());
+	            if (pk.getSignDate() != null) aspectSignatureProperties.put(SignModel.PROP_DATE, pk.getSignDate().getTime());
 	    		aspectSignatureProperties.put(SignModel.PROP_CERTIFICATE_PRINCIPAL, certificate.getSubjectX500Principal().toString());
 	    	    aspectSignatureProperties.put(SignModel.PROP_CERTIFICATE_SERIAL_NUMBER, certificate.getSerialNumber().toString());
 	    	    aspectSignatureProperties.put(SignModel.PROP_CERTIFICATE_NOT_AFTER, certificate.getNotAfter());
@@ -127,6 +132,15 @@ public class CustomBehaviour implements
 		}
 	}
 	
+	@SuppressWarnings("rawtypes")
+	private void loadBCProvider() {
+        try {
+            Class c = Class.forName("org.bouncycastle.jce.provider.BouncyCastleProvider");
+            Security.insertProviderAt((Provider)c.newInstance(), 2000);
+        } catch(Exception e) {
+            // provider is not available
+        }		
+	}
 	
 	public PolicyComponent getPolicyComponent() {
 		return policyComponent;
