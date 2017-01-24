@@ -1,5 +1,5 @@
 <webscript>
-  <shortname>Get signOtherDocs param</shortname>
+  <shortname>Get signOtherDocs property</shortname>
   <description>Get signOtherDocs property from alfresco-global.properties
   To test: curl "http://localhost:8080/alfresco/service/alfatec/alfresco-global/signOtherDocs"
   </description>

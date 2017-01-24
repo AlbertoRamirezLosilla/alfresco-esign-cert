@@ -1,0 +1,11 @@
+<webscript>
+  <shortname>Get allPages property</shortname>
+  <description>Get allPages property from alfresco-global.properties
+  To test: curl "http://localhost:8080/alfresco/service/alfatec/alfresco-global/allPages"
+  </description>
+  <family>alfatec</family>
+  <url>/alfatec/alfresco-global/allPages</url>
+  <format default="json">any</format>
+  <authentication>user</authentication>
+  <transaction>none</transaction>
+</webscript>
