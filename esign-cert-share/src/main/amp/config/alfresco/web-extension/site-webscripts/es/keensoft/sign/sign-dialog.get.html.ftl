@@ -40,6 +40,11 @@
 						<#if signFirstPage>
 						<option value="first">${msg("page.first")}</option>
 						</#if>
+						<#if allPages> 
+							<#if signAllPages>
+								<option value="all">${msg("page.all")}</option>
+							</#if>
+						</#if>
 					</select>	
 				</div>	
 				<#if signaturePurposeEnabled>
@@ -53,7 +58,7 @@
 			</div>			
 
 			<form id="signDialog-form" action="" method="POST">
-				<input type="hidden" id="dataToSign" name="dataToSign" value="${base64NodeContent}" />
+				<input type="hidden" id="dataToSign" name="dataToSign" value="" />
 				<input type="hidden" id="signedData" name="signedData" value="" />
 				<input type="hidden" id="signerData" name="signerData" value="" />
 				<input type="hidden" id="signerRole" name="signerRole" value="" />
@@ -90,7 +95,7 @@
 	      			"fifthPosition": "${fifthSignaturePosition}".replace(" ", "\t"),
 	      			"sixthPosition": "${sixthSignaturePosition}".replace(" ", "\t"),
 	      		};
-	      		var page = "last_page";
+	      		var page = "";
 	      		var documentMimetype = "${mimeType}";
 
 	      		var running = false;
@@ -154,11 +159,47 @@
 	      			{
 	      				page = "1";
 	      				YAHOO.util.Dom.get("signsPage").value = "first";
-	      			}else{
+	      				
+	      			}else if(pageSelect == "last"){
+	      				
+	      				page = "last_page";
 	      				YAHOO.util.Dom.get("signsPage").value = "last";
-	      			}
+	      				
+	      			}else if(pageSelect == "all"){
+	      					
+	      					page = "all";
+							YAHOO.util.Dom.get("signsPage").value = "all";
+					}
 
-	      			finalSignaturePosition = finalSignaturePosition.replace("{page}", page);
+
+					var base64NodeContentResponse;
+					var uri;
+					
+	      			if(page!="all"){
+	      				uri = Alfresco.constants.PROXY_URI + "/keensoft/sign/base64-node-content?nodeRef=${nodeRef}&allPages=false";
+	      				finalSignaturePosition = finalSignaturePosition.replace("{page}", page);
+	      			}else{
+	      				var pos = YAHOO.util.Dom.get("signerPostition").value;
+	      				uri = Alfresco.constants.PROXY_URI + "/keensoft/sign/base64-node-content?nodeRef=${nodeRef}&allPages=true&position="+pos;
+	      				finalSignaturePosition = "";
+	      			}
+	      			//Get Base64 content
+	      			Alfresco.util.Ajax.jsonGet({
+					          url: encodeURI(uri),
+					          successCallback:
+					          {
+					             fn: function successCallbackResponse(response, config)
+					             {
+					             	var obj = eval('(' + response.serverResponse.responseText + ')');
+                 					if (obj)
+                 					{	
+					                	YAHOO.util.Dom.get("dataToSign").value = obj.base64NodeContent;
+					                } 
+					             },
+					             scope:this
+					          }
+					});
+					   						
 	      			loadingFrameInterval = window.setInterval(checkZIndex, 500);
 
 	      		}
@@ -226,8 +267,7 @@
 	      				}
       				}
 	      		};
-
-
+	      		
 			//]]></script>
 
   	    <#else>
