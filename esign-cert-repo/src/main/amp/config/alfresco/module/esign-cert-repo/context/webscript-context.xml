@@ -34,6 +34,7 @@
 		<property name="authenticationService" ref="AuthenticationService"/>
 		<property name="personService" ref="PersonService"/>
 		<property name="nodeService" ref="NodeService"/>
+		<property name="csv" value="${esign.cert.csv}"/>
 	</bean>
 	
     <bean id="webscript.es.keensoft.sign.webscripts.signature-params.get"

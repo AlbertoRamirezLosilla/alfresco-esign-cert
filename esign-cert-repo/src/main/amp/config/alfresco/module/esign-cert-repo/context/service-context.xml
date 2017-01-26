@@ -42,8 +42,9 @@
     <bean id="WaterMark" class="es.alfatec.iText.WaterMark">
         <property name="nodeService" ref="NodeService" />
 		<property name="contentService" ref="ContentService" />
-		<property name="csv" ref="${esign.cert.csv}" />
-		<property name="url" ref="${esign.cert.csv.url}"/>
+		<property name="messageService" ref="messageService" />
+		<property name="url" value="${esign.cert.csv.url}" />
+		<property name="pages" value="${esign.cert.csv.pages}" />
     </bean>
     
     	

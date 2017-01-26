@@ -1,21 +1,15 @@
 package es.alfatec.iText;
 
 import java.io.File;
+import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
-import java.io.InputStream;
 import java.text.SimpleDateFormat;
 import java.util.Date;
-import java.util.UUID;
 
-import org.alfresco.error.AlfrescoRuntimeException;
-import org.alfresco.model.ContentModel;
-import org.alfresco.service.cmr.repository.ContentReader;
+import org.alfresco.repo.i18n.MessageService;
 import org.alfresco.service.cmr.repository.ContentService;
-import org.alfresco.service.cmr.repository.NodeRef;
 import org.alfresco.service.cmr.repository.NodeService;
-import org.alfresco.service.namespace.QName;
-import org.alfresco.util.TempFileProvider;
 
 import com.itextpdf.text.BaseColor;
 import com.itextpdf.text.Chunk;
@@ -34,36 +28,55 @@ public class WaterMark {
 	
 	private NodeService nodeService;
 	private ContentService contentService;
-	private Boolean csv;
+	private MessageService messageService;
+	
+	// Values from alfresco-global.properties
 	private String url;
+	private String pages;
 	
-	//Fonts
+	// Fonts sign
 	private static final float TEXT_SIZE = 7;
-	private static final Font FONT_SIGNER = new Font(FontFamily.HELVETICA, TEXT_SIZE, Font.NORMAL, BaseColor.GRAY);
+	private static final Font FONT_SIGN = new Font(FontFamily.HELVETICA, TEXT_SIZE, Font.NORMAL, BaseColor.BLACK);
 	
-	//Sizes
+	// Fonts CSV
+	private static final float TEXT_SIZE_CSV_1 = 10;
+	private static final Font FONT_CSV_1 = new Font(FontFamily.HELVETICA, TEXT_SIZE_CSV_1, Font.BOLD, BaseColor.BLACK);
+	private static final float TEXT_SIZE_CSV_2 = 7;
+	private static final Font FONT_CSV_2 = new Font(FontFamily.HELVETICA, TEXT_SIZE_CSV_2, Font.NORMAL, BaseColor.BLACK);
+	private static final float TEXT_SIZE_CSV_3 = 7;
+	private static final Font FONT_CSV_3 = new Font(FontFamily.HELVETICA, TEXT_SIZE_CSV_3, Font.NORMAL, BaseColor.BLACK);
+	
+	// Sizes sign
 	private static final float RECTANGLE_SIGN_HEIGHT=33;
 	private static final float RECTANGLE_SIGN_MARGIN_X=10;
 	private static final float RECTANGLE_SIGN_MARGIN_Y=10;
 	private static final float RECTANGLE_SIGN_MARGIN_INTERLINE=2;
 	private static final float RECTANGLE_SIGN_MARGIN_TEXT=4;	
+	
+	// Sizes CSV
+	private static final float RECTANGLE_CSV_MARGIN_TEXT_X = 2;
+	private static final float RECTANGLE_CSV_MARGIN_TEXT_Y = 8;
+	
+	// Possible values for CSV pages
+	private static final String FIRST="first";
+	private static final String LAST="last";
+	private static final String ALL="all";
 		
 	
-	public File printSign(NodeRef nodeRef, String signer, Integer position) throws IOException, DocumentException{
+	public void printSign(File tmpFile, String signer, Integer position) throws IOException, DocumentException{
 		
-		PdfReader pdfReader = obtainPdfReader(nodeRef);
+		// Reader
+		FileInputStream fileInputStream = new FileInputStream(tmpFile);
+		PdfReader pdfReader = new PdfReader(fileInputStream);
 		
-		//Number of Pages
-		int pages = pdfReader.getNumberOfPages();
-		
-		//Tmp file
-		File tmpDir = TempFileProvider.getTempDir();
-		String name = UUID.randomUUID().toString();
-		File tmpFile = new File(tmpDir,name);
+		//Stamper
 		FileOutputStream fileOutputStream = new FileOutputStream(tmpFile);
 		PdfStamper pdfStamper = new PdfStamper(pdfReader, fileOutputStream);
 		
-		//PageSize Calculation
+		// Number of Pages
+		int numPages = pdfReader.getNumberOfPages();
+		
+		// PageSize Calculation
 		Rectangle pageSize;
 		if(pdfReader.getPageRotation(1)==90 || pdfReader.getPageRotation(1)==270){
 			pageSize = pdfReader.getPageSize(1).rotate();
@@ -78,20 +91,20 @@ public class WaterMark {
 		float xUppeRight  = pageSize.getWidth() - RECTANGLE_SIGN_MARGIN_X;
 		float yUppeRight = yLowerLeft + RECTANGLE_SIGN_HEIGHT;
 		
-		//Rectangle sing properties
+		// Rectangle sing properties
 		Rectangle signerRectangle = new Rectangle(xLowerLeft, yLowerLeft, xUppeRight, yUppeRight);
 		signerRectangle.setBorder(Rectangle.BOX);
-		signerRectangle.setBorderColor(BaseColor.GRAY);
+		signerRectangle.setBorderColor(BaseColor.DARK_GRAY);
 		signerRectangle.setBorderWidth(1);
 		
-		//Text with sign information
-		String date = new SimpleDateFormat("dd/MM/yyyy HH:mm").format(new Date());
+		// Text with sign information
+		String date = new SimpleDateFormat(" dd/MM/yyyy HH:mm").format(new Date());
 		if((pageSize.getHeight()>pageSize.getWidth()) && (signer.length()>39))
 			signer = signer.substring(0, 39)+"...";
 		else if(signer.length()>69)
 				signer = signer.substring(0, 69)+"...";
-		String text = "Firmado por: "+signer+"   Fecha: "+date+" CET";
-		Chunk chunk = new Chunk(text,FONT_SIGNER); 
+		String text = messageService.getMessage("sign.signed")+" "+signer+"   "+messageService.getMessage("sign.date")+date+" CET";
+		Chunk chunk = new Chunk(text,FONT_SIGN); 
 		
 		// Calculation x  
 		float xText;
@@ -109,59 +122,131 @@ public class WaterMark {
 		
 		PdfContentByte canvas;
 		
-		//Add sing in all pages
-		for(int pag=1; pag<=pages; pag++){
+		// Add sing in all pages
+		for(int page=1; page<=numPages; page++){
 			
-			//Add rectangle
-			canvas = pdfStamper.getOverContent(pag);
+			// Add rectangle
+			canvas = pdfStamper.getOverContent(page);
 			canvas.saveState();
 			canvas.rectangle(signerRectangle);
 			canvas.restoreState();
 			
-			//Add text
+			// Add text
 			ColumnText.showTextAligned(canvas, -1, new Phrase(chunk), xText, yText, 0);
 		}
 		
-		//Close objects
+		// Close objects
 		pdfStamper.close();
 		pdfReader.close();
-		
-		return tmpFile;
-		
+				
 	}
 	
-
-	
-	private PdfReader obtainPdfReader(NodeRef nodeRef) throws IOException
-    {
-		//Comprobamos si existe el nodo
-		if (nodeService.exists(nodeRef) == false)
-        {
-            //Si no existe, lanzamos error
-            throw new AlfrescoRuntimeException("NodeRef: " + nodeRef + " does not exist");
-        }
+	public void printCSV(File tmpFile, String csv, Boolean allPages) throws IOException, DocumentException{
+		
+				// Reader
+				FileInputStream fileInputStream = new FileInputStream(tmpFile);
+				PdfReader pdfReader = new PdfReader(fileInputStream);
 				
-        //Comprobamos si tiene contenido
-        QName typeQName = nodeService.getType(nodeRef);
-        if (!typeQName.equals(ContentModel.TYPE_CONTENT))
-        {
-            //Si no tiene contenido, lanzamos error
-            throw new AlfrescoRuntimeException("The selected node is not a content node");
-        }
+				// Stamper
+				FileOutputStream fileOutputStream = new FileOutputStream(tmpFile);
+				PdfStamper pdfStamper = new PdfStamper(pdfReader, fileOutputStream);
+				
+				// Number of Pages
+				int numPages = pdfReader.getNumberOfPages();
+				
+				// PageSize Calculation
+				Rectangle pageSize;
+				if(pdfReader.getPageRotation(1)==90 || pdfReader.getPageRotation(1)==270){
+					pageSize = pdfReader.getPageSize(1).rotate();
+				}
+				else{
+					pageSize = pdfReader.getPageSize(1);
+				}
+				
+				// Rectangle positions
+				float xLowerLeft = 0 + RECTANGLE_SIGN_MARGIN_X ;
+				float yLowerLeft;
+				if(allPages)
+					yLowerLeft = 0 + RECTANGLE_SIGN_MARGIN_Y + RECTANGLE_SIGN_HEIGHT;
+				else
+					yLowerLeft = 0 + RECTANGLE_SIGN_MARGIN_Y;
+				float xUppeRight = xLowerLeft + RECTANGLE_SIGN_HEIGHT;
+				float yUppeRight = pageSize.getHeight() - RECTANGLE_SIGN_MARGIN_Y;
+				
+				// Rectangle properties
+				Rectangle signerRectangle = new Rectangle(xLowerLeft, yLowerLeft, xUppeRight, yUppeRight);
+				signerRectangle.setBorder(Rectangle.BOX);
+				signerRectangle.setBorderColor(BaseColor.DARK_GRAY);
+				signerRectangle.setBorderWidth(1);	
+				
+				// CSV Text 
+				
+				String text1 = messageService.getMessage("csv.text1");
+				Chunk chunk1 = new Chunk(text1,FONT_CSV_1); 
+				float x1= xLowerLeft + RECTANGLE_CSV_MARGIN_TEXT_X + TEXT_SIZE_CSV_1;
+				float y1= yLowerLeft + RECTANGLE_CSV_MARGIN_TEXT_Y;
+				
+				String text2 = messageService.getMessage("csv.text2");
+				Chunk chunk2 = new Chunk(text2 + " " + csv,FONT_CSV_2); 
+				float x2= x1 + RECTANGLE_SIGN_MARGIN_INTERLINE + TEXT_SIZE_CSV_2;
+				float y2= y1;
+				
+				String text3 = messageService.getMessage("csv.text3");
+				Chunk chunk3 = new Chunk(text3 + " " + url,FONT_CSV_3); 
+				float x3= x2 + RECTANGLE_SIGN_MARGIN_INTERLINE + TEXT_SIZE_CSV_3;
+				float y3= y1;
+						
+				
+				PdfContentByte canvas;
+				
+				// CSV pages
+				int page=0;
+				int endPage=0;
+				
+				switch (pages) {
+				case FIRST:
+					
+					page=1;
+					endPage=1;
+					break;
+					
+				case LAST:
+					
+					page=numPages;
+					endPage=numPages;
+					break;
+					
+				case ALL:
+					
+					page=1;
+					endPage=numPages;
+					break;
 
-        // Obtenemos el contenido, pero si obtenemos null, lanzamos error
-        ContentReader contentReader = contentService.getReader(nodeRef, ContentModel.PROP_CONTENT);
-
-        if(contentReader == null)
-        {
-        	throw new AlfrescoRuntimeException("The content reader for NodeRef: " + nodeRef + "is null");
-        }
-        
-        InputStream inputStream = contentReader.getContentInputStream();
-		PdfReader pdfReader = new PdfReader(inputStream);
-        
-        return pdfReader;
-    }
+				
+				}
+				
+				// Add CSV 
+				while(page<=endPage){
+					
+					// Add rectangle
+					canvas = pdfStamper.getOverContent(page);
+					canvas.saveState();
+					canvas.rectangle(signerRectangle);
+					canvas.restoreState();
+					
+					// Add text
+					ColumnText.showTextAligned(canvas, -1, new Phrase(chunk1), x1, y1, 90);
+					ColumnText.showTextAligned(canvas, -1, new Phrase(chunk2), x2, y2, 90);
+					ColumnText.showTextAligned(canvas, -1, new Phrase(chunk3), x3, y3, 90);
+					
+					page++;
+				}
+				
+				// Close objects
+				pdfStamper.close();
+				pdfReader.close();
+	}
+	
 
 	public NodeService getNodeService() {
 		return nodeService;
@@ -179,14 +264,6 @@ public class WaterMark {
 		this.contentService = contentService;
 	}
 
-	public Boolean getCsv() {
-		return csv;
-	}
-
-	public void setCsv(Boolean csv) {
-		this.csv = csv;
-	}
-
 	public String getUrl() {
 		return url;
 	}
@@ -194,6 +271,21 @@ public class WaterMark {
 	public void setUrl(String url) {
 		this.url = url;
 	}
-	
 
+	public MessageService getMessageService() {
+		return messageService;
+	}
+
+	public void setMessageService(MessageService messageService) {
+		this.messageService = messageService;
+	}
+
+	public String getPages() {
+		return pages;
+	}
+
+	public void setPages(String pages) {
+		this.pages = pages;
+	}
+	
 }

@@ -2,9 +2,12 @@ package es.keensoft.alfresco.sign.webscript;
 
 import java.io.File;
 import java.io.FileInputStream;
+import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.util.UUID;
 
+import org.alfresco.error.AlfrescoRuntimeException;
 import org.alfresco.model.ContentModel;
 import org.alfresco.repo.content.MimetypeMap;
 import org.alfresco.service.cmr.repository.ContentIOException;
@@ -14,6 +17,8 @@ import org.alfresco.service.cmr.repository.NodeRef;
 import org.alfresco.service.cmr.repository.NodeService;
 import org.alfresco.service.cmr.security.AuthenticationService;
 import org.alfresco.service.cmr.security.PersonService;
+import org.alfresco.service.namespace.QName;
+import org.alfresco.util.TempFileProvider;
 import org.apache.commons.codec.binary.Base64;
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang.exception.ExceptionUtils;
@@ -25,6 +30,8 @@ import org.springframework.extensions.webscripts.WebScriptRequest;
 import org.springframework.extensions.webscripts.WebScriptResponse;
 
 import com.google.gson.Gson;
+import com.itextpdf.text.pdf.PdfReader;
+import com.itextpdf.text.pdf.PdfStamper;
 
 import es.alfatec.iText.WaterMark;
 import es.keensoft.alfresco.sign.webscript.bean.Base64NodeContentResponse;
@@ -40,6 +47,8 @@ public class Base64NodeContent extends AbstractWebScript {
 	private AuthenticationService authenticationService;
 	private PersonService personService;
 	private NodeService nodeService;
+	
+	private Boolean csv;
 	
 	
 	@Override
@@ -58,29 +67,57 @@ public class Base64NodeContent extends AbstractWebScript {
 			
 			byte[] nodeContent;
 			
-			if(!allPages){
+			if(!allPages && !csv){
 				nodeContent = getNodeContent(nodeRef);
 				
 			}
 			
 			else{
 				
-				Integer position = Integer.valueOf(req.getParameter("position"));
+				//Tmp file
+				File tmpDir = TempFileProvider.getTempDir();
+				String name = UUID.randomUUID().toString();
+				File tmpFile = new File(tmpDir,name);
 				
-				String userName = authenticationService.getCurrentUserName();
-				NodeRef user = personService.getPerson(userName);
-				String signer = nodeService.getProperty(user, ContentModel.PROP_FIRSTNAME)+" "+nodeService.getProperty(user, ContentModel.PROP_LASTNAME);
+				PdfReader pdfReader = obtainPdfReader(nodeRef);
+				FileOutputStream fileOutputStream = new FileOutputStream(tmpFile);
 				
-				File tmpFile = waterMark.printSign(nodeRef, signer, position);
+				PdfStamper pdfStamper = new PdfStamper(pdfReader, fileOutputStream);
+				pdfReader.close();
+				pdfStamper.close();
 				
-				InputStream is = new FileInputStream(tmpFile);
-				nodeContent = IOUtils.toByteArray(is);
+				
+				
+				if(allPages){
+					
+					Integer position = Integer.valueOf(req.getParameter("position"));
+					
+					String userName = authenticationService.getCurrentUserName();
+					NodeRef user = personService.getPerson(userName);
+					String signer = nodeService.getProperty(user, ContentModel.PROP_FIRSTNAME)+" "+nodeService.getProperty(user, ContentModel.PROP_LASTNAME);
+					
+					waterMark.printSign(tmpFile, signer, position);				
+				}
+				
+				if(csv){
+					
+					String uuid = (String) nodeService.getProperty(nodeRef, ContentModel.PROP_NODE_UUID);
+					waterMark.printCSV(tmpFile, uuid, allPages);
+				}
+				
+				InputStream inputStream = new FileInputStream(tmpFile);
+				nodeContent = IOUtils.toByteArray(inputStream);
+				inputStream.close();
+				tmpFile.delete();
 				
 			}
 			
 			response.setBase64NodeContent(Base64.encodeBase64String(nodeContent));
 			response.setNodeRef(nodeRef.getId());
 			response.setCode(RESPONSE_CODE_OK);
+			
+			
+			
 			
 		} catch (Exception e) {
 			
@@ -98,6 +135,37 @@ public class Base64NodeContent extends AbstractWebScript {
 		ContentReader reader = contentService.getReader(nodeRef, ContentModel.PROP_CONTENT);
 		return IOUtils.toByteArray(reader.getContentInputStream());
 	}
+	
+	private PdfReader obtainPdfReader(NodeRef nodeRef) throws IOException
+	    {
+			//Comprobamos si existe el nodo
+			if (nodeService.exists(nodeRef) == false)
+	        {
+	            //Si no existe, lanzamos error
+	            throw new AlfrescoRuntimeException("NodeRef: " + nodeRef + " does not exist");
+	        }
+					
+	        //Comprobamos si tiene contenido
+	        QName typeQName = nodeService.getType(nodeRef);
+	        if (!typeQName.equals(ContentModel.TYPE_CONTENT))
+	        {
+	            //Si no tiene contenido, lanzamos error
+	            throw new AlfrescoRuntimeException("The selected node is not a content node");
+	        }
+	
+	        // Obtenemos el contenido, pero si obtenemos null, lanzamos error
+	        ContentReader contentReader = contentService.getReader(nodeRef, ContentModel.PROP_CONTENT);
+	
+	        if(contentReader == null)
+	        {
+	        	throw new AlfrescoRuntimeException("The content reader for NodeRef: " + nodeRef + "is null");
+	        }
+	        
+	        InputStream inputStream = contentReader.getContentInputStream();
+			PdfReader pdfReader = new PdfReader(inputStream);
+	        
+	        return pdfReader;
+	    }
 	
 	public void setContentService(ContentService contentService) {
 		this.contentService = contentService;
@@ -137,5 +205,14 @@ public class Base64NodeContent extends AbstractWebScript {
 
 	public ContentService getContentService() {
 		return contentService;
-	}	
+	}
+
+	public Boolean getCsv() {
+		return csv;
+	}
+
+	public void setCsv(Boolean csv) {
+		this.csv = csv;
+	}
+
 }
