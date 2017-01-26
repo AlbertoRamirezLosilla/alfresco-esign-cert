@@ -164,11 +164,11 @@
 	      		}
 
 	      		function show_signed(signatureBase64, certificateB64) {
-	      		    signedData.value = signatureBase64;
-	      		    signerData.value = certificateB64;
-	      			YAHOO.util.Dom.get("info").innerHTML="${msg("signed")}";
-                    var submitButton = YAHOO.util.Dom.get("signDialog-ok");
-	      			submitButton.click();
+	      		    YAHOO.util.Dom.get("signedData").value = signatureBase64;
+	      		    YAHOO.util.Dom.get("signerData").value = certificateB64;
+	      		    YAHOO.util.Dom.get("info").innerHTML="${msg("signed")}";
+                            var submitButton = YAHOO.util.Dom.get("signDialog-ok");
+	      		    submitButton.click();
 	      		}
 
                 function show_error(errorType, errorMessage) {

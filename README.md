@@ -24,7 +24,7 @@ Currently following browser and OS combinations are supported:
 
 Windows
 * IE Edge: not supported by now
-* IE Classic: Local application
+* IE Classic: Local application / Applet
 * Google Chrome: Local application
 * Mozilla Firefox: Local application / Applet
 
