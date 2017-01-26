@@ -25,8 +25,8 @@ function main() {
 	model.signAllPages = true;
 	
 	if(nodeProperties.item.node.properties["sign:signsPage"] != null){
-		model.signLastPage = (nodeProperties.item.node.properties["sign:signsPage"] == "first");
-		model.signFirstPage = (nodeProperties.item.node.properties["sign:signsPage"] == "last");
+		model.signFirstPage = (nodeProperties.item.node.properties["sign:signsPage"] == "first");
+		model.signLastPage = (nodeProperties.item.node.properties["sign:signsPage"] == "last");
 		model.signAllPages = (nodeProperties.item.node.properties["sign:signsPage"] == "all");
 	}
 	
