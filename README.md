@@ -138,6 +138,18 @@ esign.cert.signManyTimes=true
 
 # Sign Purpose (Default enabled=false)
 esign.cert.params.signPurpose.enabled=false
+
+# To enable all pages option (Default false)
+esign.cert.allPages=false
+
+# To enable CSV (Default false). If true, set esign.cert.csv.url
+esign.cert.csv=false
+
+# CSV pages {first, last, all} (Default all)
+esign.cert.csv.pages=all
+
+# Web application URL to download document using CSV (Default null)
+esign.cert.csv.url=
 ```
 
 
