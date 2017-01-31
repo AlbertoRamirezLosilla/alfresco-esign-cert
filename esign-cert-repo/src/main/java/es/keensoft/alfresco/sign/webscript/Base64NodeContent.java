@@ -59,15 +59,19 @@ public class Base64NodeContent extends AbstractWebScript {
 
 		try {
 			
+			//nodeRef parameter
 			String docNodeRefStr = req.getParameter("nodeRef");
 			NodeRef nodeRef = new NodeRef(docNodeRefStr);	
 			
 			//All pages parameter
 			Boolean allPages = Boolean.valueOf(req.getParameter("allPages"));
 			
+			//Mimetype parameter
+			String mimetype = req.getParameter("mimetype");
+			
 			byte[] nodeContent;
 			
-			if(!allPages && !csv){
+			if(!mimetype.equals("pdf")||(!allPages && !csv)){
 				nodeContent = getNodeContent(nodeRef);
 				
 			}

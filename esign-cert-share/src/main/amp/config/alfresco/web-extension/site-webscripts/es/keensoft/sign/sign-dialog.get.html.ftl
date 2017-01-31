@@ -176,11 +176,11 @@
 					var uri;
 					
 	      			if(page!="all"){
-	      				uri = Alfresco.constants.PROXY_URI + "/keensoft/sign/base64-node-content?nodeRef=${nodeRef}&allPages=false";
+	      				uri = Alfresco.constants.PROXY_URI + "/keensoft/sign/base64-node-content?nodeRef=${nodeRef}&allPages=false&mimetype="+documentMimetype;
 	      				finalSignaturePosition = finalSignaturePosition.replace("{page}", page);
 	      			}else{
 	      				var pos = YAHOO.util.Dom.get("signerPostition").value;
-	      				uri = Alfresco.constants.PROXY_URI + "/keensoft/sign/base64-node-content?nodeRef=${nodeRef}&allPages=true&position="+pos;
+	      				uri = Alfresco.constants.PROXY_URI + "/keensoft/sign/base64-node-content?nodeRef=${nodeRef}&allPages=true&mimetype="+documentMimetype+"&position="+pos;
 	      				finalSignaturePosition = "";
 	      			}
 	      			//Get Base64 content
@@ -224,6 +224,24 @@
 	      					clearInterval(waitToLoadDOM);
 		      				YAHOO.util.Dom.get("loading-text").style.display = "block";
 			      			YAHOO.util.Dom.get("loading").style.display = "block";
+			      			
+			      			//Get Base64 content
+	      					Alfresco.util.Ajax.jsonGet({
+					          url: encodeURI(Alfresco.constants.PROXY_URI + "/keensoft/sign/base64-node-content?nodeRef=${nodeRef}&allPages=false&mimetype="+documentMimetype),
+					          successCallback:
+					          {
+					             fn: function successCallbackResponse(response, config)
+					             {
+					             	var obj = eval('(' + response.serverResponse.responseText + ')');
+                 					if (obj)
+                 					{	
+					                	YAHOO.util.Dom.get("dataToSign").value = obj.base64NodeContent;
+					                } 
+					             },
+					             scope:this
+					          }
+							});
+			      			
 			      			loadingFrameInterval = window.setInterval(checkZIndex, 500);
 	      				}
 	      			}, 500);
