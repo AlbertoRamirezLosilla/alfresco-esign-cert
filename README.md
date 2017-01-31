@@ -30,7 +30,7 @@ Windows
 
 Mac OS 
 * Mozilla Firefox: Applet
-* Apple Safari: Applet
+* Apple Safari: Local application (currently not working)
 * Google Chrome: Local application (currently not working)
 
 Linux Ubuntu
@@ -52,7 +52,7 @@ This module uses a software digital certificate or a cryptographic hardware supp
 The plugin is licensed under the [LGPL v3.0](http://www.gnu.org/licenses/lgpl-3.0.html). 
 
 **State**
-Current addon release 1.3.1 is ***PROD***
+Current addon release 1.5.0 is ***PROD***
 
 **Compatibility**
 The current version has been developed using Alfresco 5.0.d and Alfresco SDK 2.1.1, although it runs in Alfresco 5.1.x
@@ -69,8 +69,8 @@ Downloading the ready-to-deploy-plugin
 --------------------------------------
 The binary distribution is made of two amp files:
 
-* [repo AMP](https://github.com/keensoft/alfresco-esign-cert/releases/download/1.3.1/esign-cert-repo.amp)
-* [share AMP](https://github.com/keensoft/alfresco-esign-cert/releases/download/1.3.1/esign-cert-share.amp)
+* [repo AMP](https://github.com/keensoft/alfresco-esign-cert/releases/download/1.5.0/esign-cert-repo.amp)
+* [share AMP](https://github.com/keensoft/alfresco-esign-cert/releases/download/1.5.0/esign-cert-share.amp)
 
 You can install them by using standard [Alfresco deployment tools](http://docs.alfresco.com/community/tasks/dev-extensions-tutorials-simple-module-install-amp.html)
 
@@ -87,12 +87,12 @@ Signing the applet
 ------------------
 You can download plain applet from http://forja-ctt.administracionelectronica.gob.es/web/clienteafirma
 
-Oracle [jarsigner](http://docs.oracle.com/javase/7/docs/technotes/tools/windows/jarsigner.html) can be used to perform a signature on [miniapplet-full_1_4.jar](https://github.com/keensoft/alfresco-esign-cert/raw/master/esign-cert-share/src/main/amp/web/sign/miniapplet-full_1_4.jar). To deploy this change, just replace current JAR for your signed JAR and rebuild the artifacts.
+Oracle [jarsigner](http://docs.oracle.com/javase/7/docs/technotes/tools/windows/jarsigner.html) can be used to perform a signature on [miniapplet-full_1_4.jar](https://github.com/keensoft/alfresco-esign-cert/raw/master/esign-cert-share/src/main/amp/web/sign/miniapplet-full_1_5.jar). To deploy this change, just replace current JAR for your signed JAR and rebuild the artifacts.
 
 Below a sample `jarsigner` invocation is provided
 
 ```
-$ jarsigner -storetype pkcs12 -keystore keensoft_sign_code_valid-until_20170811.pfx miniapplet-full_1_4.jar -tsa http://tss.accv.es:8318/tsa te-9b5d5438-2bb6-435f-8542-6d711bc9784f
+$ jarsigner -storetype pkcs12 -keystore keensoft_sign_code_valid-until_20170811.pfx miniapplet-full_1_5.jar -tsa http://tss.accv.es:8318/tsa te-9b5d5438-2bb6-435f-8542-6d711bc9784f
 ```
 
 
