@@ -49,6 +49,7 @@ public class Base64NodeContent extends AbstractWebScript {
 	private NodeService nodeService;
 	
 	private Boolean csv;
+	private Boolean messageSigns;
 	
 	
 	@Override
@@ -69,9 +70,11 @@ public class Base64NodeContent extends AbstractWebScript {
 			//Mimetype parameter
 			String mimetype = req.getParameter("mimetype");
 			
+			//
+			
 			byte[] nodeContent;
 			
-			if(!mimetype.equals("pdf")||(!allPages && !csv)){
+			if((!mimetype.equals("pdf")||(!allPages && !csv))&&(!messageSigns)){
 				nodeContent = getNodeContent(nodeRef);
 				
 			}
@@ -100,13 +103,20 @@ public class Base64NodeContent extends AbstractWebScript {
 					NodeRef user = personService.getPerson(userName);
 					String signer = nodeService.getProperty(user, ContentModel.PROP_FIRSTNAME)+" "+nodeService.getProperty(user, ContentModel.PROP_LASTNAME);
 					
-					waterMark.printSign(tmpFile, signer, position);				
+					waterMark.printSign(tmpFile, signer, position);	
+
 				}
 				
 				if(csv){
 					
 					String uuid = (String) nodeService.getProperty(nodeRef, ContentModel.PROP_NODE_UUID);
 					waterMark.printCSV(tmpFile, uuid, allPages);
+				}
+				
+				if(messageSigns){
+					
+					String pageSelect = String.valueOf(req.getParameter("pageSelect"));
+					waterMark.printMessageSigns(tmpFile, pageSelect, csv);
 				}
 				
 				InputStream inputStream = new FileInputStream(tmpFile);
@@ -217,6 +227,14 @@ public class Base64NodeContent extends AbstractWebScript {
 
 	public void setCsv(Boolean csv) {
 		this.csv = csv;
+	}
+
+	public Boolean getMessageSigns() {
+		return messageSigns;
+	}
+
+	public void setMessageSigns(Boolean messageSigns) {
+		this.messageSigns = messageSigns;
 	}
 
 }

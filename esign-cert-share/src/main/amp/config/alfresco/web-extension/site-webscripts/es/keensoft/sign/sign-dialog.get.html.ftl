@@ -176,11 +176,11 @@
 					var uri;
 					
 	      			if(page!="all"){
-	      				uri = Alfresco.constants.PROXY_URI + "/keensoft/sign/base64-node-content?nodeRef=${nodeRef}&allPages=false&mimetype="+documentMimetype;
+	      				uri = Alfresco.constants.PROXY_URI + "/keensoft/sign/base64-node-content?nodeRef=${nodeRef}&allPages=false&pageSelect="+pageSelect+"&mimetype="+documentMimetype;
 	      				finalSignaturePosition = finalSignaturePosition.replace("{page}", page);
 	      			}else{
 	      				var pos = YAHOO.util.Dom.get("signerPostition").value;
-	      				uri = Alfresco.constants.PROXY_URI + "/keensoft/sign/base64-node-content?nodeRef=${nodeRef}&allPages=true&mimetype="+documentMimetype+"&position="+pos;
+	      				uri = Alfresco.constants.PROXY_URI + "/keensoft/sign/base64-node-content?nodeRef=${nodeRef}&allPages=true&pageSelect="+pageSelect+"&mimetype="+documentMimetype+"&position="+pos;
 	      				finalSignaturePosition = "";
 	      			}
 	      			//Get Base64 content

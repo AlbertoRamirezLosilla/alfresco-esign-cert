@@ -23,6 +23,7 @@
 		  <property name="nodeService" ref="NodeService" />
 		  <property name="versionService" ref="VersionService" />
 		  <property name="contentService" ref="ContentService" />
+		  <property name="detectSigns" value="${esign.cert.detectSigns}" />
 	</bean>
 	
 	<bean id="deleteRelatedDocumentsBehaviour" class="es.keensoft.alfresco.behaviour.TransactionalDeleteBehaviour" init-method="init">
@@ -45,7 +46,7 @@
 		<property name="messageService" ref="messageService" />
 		<property name="url" value="${esign.cert.csv.url}" />
 		<property name="pages" value="${esign.cert.csv.pages}" />
+		<property name="messageText" value="${esign.cert.messageSigns.text}" />
     </bean>
-    
     	
 </beans>
