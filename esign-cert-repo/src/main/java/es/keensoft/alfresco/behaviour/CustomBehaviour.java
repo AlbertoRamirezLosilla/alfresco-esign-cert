@@ -59,38 +59,39 @@ public class CustomBehaviour implements
 	@Override
 	public void onCreateNode(ChildAssociationRef childNodeRef) {
 
-		//if(detectSigns){
-		try{
-			NodeRef node = childNodeRef.getChildRef();
-			if (nodeService.exists(node)) {
-				ContentData contentData = (ContentData) nodeService.getProperty(node, ContentModel.PROP_CONTENT);
-				// Do this check only if the uploaded document is a PDF
-				if (contentData != null && contentData.getMimetype().equalsIgnoreCase("application/pdf")) {
-					ArrayList<Map<QName, Serializable>> signatures = getDigitalSignatures(node);
-					if(signatures != null) {
-						for(Map<QName, Serializable> aspectProperties : signatures) {
-							String originalFileName = nodeService.getProperty(node, ContentModel.PROP_NAME).toString();
-							String signatureFileName = FilenameUtils.getBaseName(originalFileName) + "-" 
-							+ System.currentTimeMillis() + "-" + PADES;
-						
-							// Creating a node reference without type (no content and no folder): remains invisible for Share
-							NodeRef signatureNodeRef = nodeService.createNode(
-									nodeService.getPrimaryParent(node).getParentRef(),
-									ContentModel.ASSOC_CONTAINS, 
-									QName.createQName(signatureFileName), 
-									ContentModel.TYPE_CMOBJECT).getChildRef();
+		if(detectSigns){
+			try{
+				NodeRef node = childNodeRef.getChildRef();
+				if (nodeService.exists(node)) {
+					ContentData contentData = (ContentData) nodeService.getProperty(node, ContentModel.PROP_CONTENT);
+					// Do this check only if the uploaded document is a PDF
+					if (contentData != null && contentData.getMimetype().equalsIgnoreCase("application/pdf")) {
+						ArrayList<Map<QName, Serializable>> signatures = getDigitalSignatures(node);
+						if(signatures != null) {
+							for(Map<QName, Serializable> aspectProperties : signatures) {
+								String originalFileName = nodeService.getProperty(node, ContentModel.PROP_NAME).toString();
+								String signatureFileName = FilenameUtils.getBaseName(originalFileName) + "-" 
+								+ System.currentTimeMillis() + "-" + PADES;
 							
-							nodeService.createAssociation(node, signatureNodeRef, SignModel.ASSOC_SIGNATURE);
-							nodeService.createAssociation(signatureNodeRef, node, SignModel.ASSOC_DOC);
-							
-						    aspectProperties.put(SignModel.PROP_FORMAT, PADES);
-							nodeService.addAspect(signatureNodeRef, SignModel.ASPECT_SIGNATURE, aspectProperties);
+								// Creating a node reference without type (no content and no folder): remains invisible for Share
+								NodeRef signatureNodeRef = nodeService.createNode(
+										nodeService.getPrimaryParent(node).getParentRef(),
+										ContentModel.ASSOC_CONTAINS, 
+										QName.createQName(signatureFileName), 
+										ContentModel.TYPE_CMOBJECT).getChildRef();
+								
+								nodeService.createAssociation(node, signatureNodeRef, SignModel.ASSOC_SIGNATURE);
+								nodeService.createAssociation(signatureNodeRef, node, SignModel.ASSOC_DOC);
+								
+							    aspectProperties.put(SignModel.PROP_FORMAT, PADES);
+								nodeService.addAspect(signatureNodeRef, SignModel.ASPECT_SIGNATURE, aspectProperties);
+							}
 						}
 					}
 				}
+			} finally {
+				
 			}
-		} finally {
-			
 		}
 	}
 
