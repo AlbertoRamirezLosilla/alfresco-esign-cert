@@ -72,7 +72,7 @@ Current addon release 1.8.2 is ***PROD***
 **Compatibility**  
 The current version has been developed using Alfresco 5.0.d and Alfresco SDK 2.1.1, although it runs in Alfresco 5.1.x
 
-* Use 1.7.1 for Alfresco 201707 (aka Alfresco 5.2)
+* Use 1.7.1 for Alfresco 201707 (aka Alfresco 5.2) or use 1.8.0+ for Alfresco 201707 (aka Alfresco 5.2) with external signatures extractor.
 
 * Use 1.8.0+ for Alfresco 201806 (aka Alfresco 6.0)  
   
@@ -250,6 +250,47 @@ Download signature report action is only available for nodes with next features:
 Web service is available to verify documents with csv:  
 http://localhost:8080/alfresco/s/alfatec/document-csv?csv=textCSV  
 You should be replace with the CSV (sign:csv) instance of 'textCSV'
+
+Sign Extractor  
+----------------------  
+From version 1.8.3, you can use a custom digital signature extractor. The alfresco-sign-cert plugin can extract digital signatures from a document, however, this feature is only supported from Alfresco version 6.0 onwards. If this functionality is used in versions prior to Alfresco version 6.0, an incompatibility failure occurs with the iText library.
+
+If you use an external signature extractor, this problem will disappear and the plugin will be compatible with all Alfresco versions.
+
+##### Configuration #####
+By default, plugin uses its internal signature extractor (only complatible with Alfresco 6.0+).
+
+So, default configuration on alfresco-global.properties is the following:
+```
+# Use plugin digital signature extractor or another external application
+esign.external.digital.signatures.extractor.url=
+esign.external.digital.signatures.extractor.extractorType=internalExtractor
+esign.external.digital.signatures.extractor.signatureExtractorUsername=
+esign.external.digital.signatures.extractor.signatureExtractorPass=
+```
+
+If you want to use an external signature extractor, you have to fill URL of POST web service and its credentials (username and password). In addiction you must change the extractorType property from **internalExtractor** to **externalExtractor**.
+
+Your external signature extractor should return the following data and JSON structure:
+```
+[
+    {
+        "sign_not_after": "Wed Dec 30 09:39:59 CET 2020",
+        "sign_error": false,
+        "sign_subject": "CN=XXXXXXXXXXX - XXXXXXXXXX, GIVENNAME=XXXXXXX, SURNAME=XXXXXXXXXX, SERIALNUMBER=XXXXXXXXXXXXX, C=ES",
+        "sign_issuer": "CN=XXXXXXXXX, OU=XXXXXXX, O=XXXXX, C=XX",
+        "sign_date": "Fri May 18 09:48:51 CEST 2018",
+        "sign_serial_number": "XXXXXXXXXXXXXXXXXXXXX"
+    },
+    {
+        "sign_error": true,
+        "sign_error_message": "can't decode PKCS7SignedData object"
+    }
+]
+```
+First item is an example of ok signature extraction and second item is an example of ko signature extraction.
+
+if you wish, you can use the Alfatec Sistemas S.L. digital signature extractor.
   
 Todo  
 ----------------------  

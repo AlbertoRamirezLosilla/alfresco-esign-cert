@@ -18,12 +18,22 @@
 -->
 <beans>
    
+    <bean id="internalExtractor" class="es.alfatec.alfresco.extractor.InternalDigitalSignaturesExtractor" lazy-init="true">
+	</bean>
+
+	<bean id="externalExtractor" class="es.alfatec.alfresco.extractor.ExternalDigitalSignaturesExtractor" lazy-init="true">
+		<property name="signatureExtractorAppURL" value="${esign.external.digital.signatures.extractor.url}" />
+		<property name="signatureExtractorUsername" value="${esign.external.digital.signatures.extractor.signatureExtractorUsername}"/>
+		<property name="signatureExtractorPass" value="${esign.external.digital.signatures.extractor.signatureExtractorPass}"/>
+	</bean>
+   
 	<bean id="signCustomBehavior" class="es.keensoft.alfresco.behaviour.CustomBehaviour" init-method="init" depends-on="esign-cert-repo.dictionaryBootstrap">
 		  <property name="policyComponent" ref="policyComponent" />
 		  <property name="nodeService" ref="NodeService" />
 		  <property name="versionService" ref="VersionService" />
 		  <property name="contentService" ref="ContentService" />
 		  <property name="messageService" ref="messageService" />
+		  <property name="extractor" ref="${esign.external.digital.signatures.extractor.extractorType}" />
 	</bean>
 	
 	<bean id="deleteRelatedDocumentsBehaviour" class="es.keensoft.alfresco.behaviour.TransactionalDeleteBehaviour" init-method="init">
