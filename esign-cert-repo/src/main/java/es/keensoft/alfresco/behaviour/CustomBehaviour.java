@@ -35,6 +35,7 @@ import es.keensoft.alfresco.model.SignModel;
 
 public class CustomBehaviour implements 
     NodeServicePolicies.OnCreateNodePolicy,
+    NodeServicePolicies.OnMoveNodePolicy,
     ContentServicePolicies.OnContentUpdatePolicy {
 	
 	private static Log logger = LogFactory.getLog(CustomBehaviour.class);
@@ -53,6 +54,10 @@ public class CustomBehaviour implements
 		        NodeServicePolicies.OnCreateNodePolicy.QNAME,
 		        ContentModel.TYPE_CONTENT,
 		        new JavaBehaviour(this, "onCreateNode", NotificationFrequency.TRANSACTION_COMMIT));
+        policyComponent.bindClassBehaviour(
+                NodeServicePolicies.OnMoveNodePolicy.QNAME,
+                SignModel.ASPECT_SIGNED,
+                new JavaBehaviour(this, "onMoveNode", NotificationFrequency.TRANSACTION_COMMIT));
 		policyComponent.bindClassBehaviour(
 		        ContentServicePolicies.OnContentUpdatePolicy.QNAME,
 		        ContentModel.TYPE_CONTENT,
@@ -71,11 +76,35 @@ public class CustomBehaviour implements
 		processSignatures(node);
 	}
 
-	private void processSignatures(NodeRef node) {
-	    
-		ContentData contentData = (ContentData) nodeService.getProperty(node, ContentModel.PROP_CONTENT);
-		
-		if (contentData != null && contentData.getMimetype().equalsIgnoreCase(MimetypeMap.MIMETYPE_PDF)) {
+
+
+	@Override
+	public void onContentUpdate(NodeRef nodeRef, boolean newContent) {
+
+	    if (nodeService.exists(nodeRef) && !newContent) {
+			processSignatures(nodeRef);
+		}
+
+	}
+	
+    @Override
+    public void onMoveNode(ChildAssociationRef from, ChildAssociationRef to) {
+        
+        for (AssociationRef signatureAssoc : nodeService.getTargetAssocs(from.getChildRef(), SignModel.ASSOC_SIGNATURE)) {
+            nodeService.moveNode(
+                    signatureAssoc.getTargetRef(), 
+                    to.getParentRef(), 
+                    ContentModel.ASSOC_CONTAINS, 
+                    QName.createQName(nodeService.getProperty(signatureAssoc.getTargetRef(), ContentModel.PROP_NAME).toString()));
+        }
+
+    }
+	
+    private void processSignatures(NodeRef node) {
+        
+        ContentData contentData = (ContentData) nodeService.getProperty(node, ContentModel.PROP_CONTENT);
+        
+        if (contentData != null && contentData.getMimetype().equalsIgnoreCase(MimetypeMap.MIMETYPE_PDF)) {
 		    
 			List<Signature> signatures = getDigitalSignatures(node);
 			
@@ -118,25 +147,25 @@ public class CustomBehaviour implements
 		    			logger.warn("Signature has an error or it's invalid!");
 			    	}
 				}
-			    
+
                 // Implicit signature aspect
-			    Map<QName, Serializable> aspectSignedProperties = new HashMap<QName, Serializable>(); 
+                Map<QName, Serializable> aspectSignedProperties = new HashMap<QName, Serializable>(); 
                 aspectSignedProperties.put(SignModel.PROP_TYPE, I18NUtil.getMessage("signature.implicit"));
                 nodeService.addAspect(node,  SignModel.ASPECT_SIGNED, aspectSignedProperties);
                 
-			} else {
-			    
+            } else {
+                
                 if (nodeService.hasAspect(node, SignModel.ASPECT_SIGNED)) {
                     removeSignatureMetadata(node);
                 }
-			    
-			}
-		}
-		
-	}
-	
-	private void removeSignatureMetadata(NodeRef nodeRef) {
-	    
+                
+            }
+        }
+        
+    }
+    
+    private void removeSignatureMetadata(NodeRef nodeRef) {
+        
         if (nodeService.hasAspect(nodeRef, SignModel.ASPECT_SIGNED)) {
              List<AssociationRef> targetAssocs = nodeService.getTargetAssocs(nodeRef, SignModel.ASSOC_SIGNATURE);
              for (AssociationRef targetAssoc : targetAssocs) {
@@ -149,20 +178,9 @@ public class CustomBehaviour implements
              }
         }
         nodeService.removeAspect(nodeRef, SignModel.ASPECT_SIGNED);
-
-	}
-
-	@Override
-	public void onContentUpdate(NodeRef nodeRef, boolean newContent) {
-		
-	    if (nodeService.exists(nodeRef) && !newContent) {
-			processSignatures(nodeRef);
-		}
-
-	}
-	
-	public List<Signature> getDigitalSignatures(NodeRef node) {
-		
+    }
+    
+    public List<Signature> getDigitalSignatures(NodeRef node) {		
 		ContentReader contentReader = contentService.getReader(node, ContentModel.PROP_CONTENT);
 		
 		//Extract digital signatures
