@@ -99,10 +99,7 @@ Building the artifacts
 If you are new to Alfresco and the Alfresco Maven SDK, you should start by reading [Jeff Potts' tutorial on the subject](http://ecmarchitect.com/alfresco-developer-series-tutorials/maven-sdk/tutorial/tutorial.html).  
   
 You can build the artifacts from source code using maven  
-```$ mvn clean package```  
-  
-You can build the artifact repo with the dependency itextpdf 5.0.6,  it works from Alfresco 5.0.d to 201704
-```$ mvn clean package -P5.0.d```    
+```$ mvn clean package```   
   
 Signing the applet  
 ------------------  

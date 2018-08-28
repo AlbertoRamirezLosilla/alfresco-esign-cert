@@ -101,21 +101,6 @@
         </profile>
         
         <!--
-            Brings old library iText with bc libraries to use in 5.0.d
-            if the '5.0.d' profile has been activated, needs to be activated manually.
-            -->
-        <profile>
-            <id>5.0.d</id>
-            <dependencies>
-                <dependency>
-			        <groupId>com.itextpdf</groupId>
-			        <artifactId>itextpdf</artifactId>
-			        <version>5.0.6</version>
-			    </dependency>
-            </dependencies>
-        </profile>
-
-        <!--
             If the 'amp-to-war' profile is enabled then make sure to bring in the alfresco-rad module,
             which has the H2 scripts and other RAD features.
 
